@@ -15,6 +15,7 @@ type Config struct {
 	Storage   StorageConfig   `toml:"storage"`
 	Outage    OutageConfig    `toml:"outage"`
 	TUI       TUIConfig       `toml:"tui"`
+	Web       WebConfig       `toml:"web"`
 	Verbose   bool            `toml:"-"`
 }
 
@@ -42,6 +43,11 @@ type OutageConfig struct {
 
 type TUIConfig struct {
 	DefaultTimeRange string `toml:"default_timerange"`
+}
+
+type WebConfig struct {
+	Listen string `toml:"listen"`
+	Port   int    `toml:"port"`
 }
 
 // Duration wraps time.Duration for TOML parsing.
@@ -92,6 +98,10 @@ func DefaultConfig() *Config {
 		},
 		TUI: TUIConfig{
 			DefaultTimeRange: "1h",
+		},
+		Web: WebConfig{
+			Listen: "0.0.0.0",
+			Port:   8080,
 		},
 	}
 }

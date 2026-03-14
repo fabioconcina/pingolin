@@ -2,3 +2,4 @@ pingolin
 dist/
 .DS_Store
 deploy.sh
+.env.mk

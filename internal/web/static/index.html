@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>pingolin</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="apple-touch-icon" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <header>
+            <h1>pingolin</h1>
+            <div id="status" class="status healthy">HEALTHY</div>
+        </header>
+
+        <section class="targets" id="targets"></section>
+
+        <section class="probes">
+            <div class="card" id="dns-card">
+                <h3>DNS</h3>
+                <div class="probe-stats">
+                    <span class="label">last</span>
+                    <span class="value" id="dns-last">--</span>
+                    <span class="label">avg</span>
+                    <span class="value" id="dns-avg">--</span>
+                    <span class="indicator" id="dns-status"></span>
+                </div>
+            </div>
+            <div class="card" id="http-card">
+                <h3>HTTP</h3>
+                <div class="probe-stats">
+                    <span class="label">last</span>
+                    <span class="value" id="http-last">--</span>
+                    <span class="label">status</span>
+                    <span class="value" id="http-status">--</span>
+                    <span class="indicator" id="http-indicator"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="outages">
+            <div class="outages-header">
+                <h3>Recent Outages</h3>
+                <div class="time-ranges" id="time-ranges">
+                    <button class="active" data-range="1h">1h</button>
+                    <button data-range="6h">6h</button>
+                    <button data-range="24h">24h</button>
+                    <button data-range="7d">7d</button>
+                    <button data-range="30d">30d</button>
+                </div>
+            </div>
+            <div id="outages-list" class="outages-list">
+                <span class="dim">No outages recorded</span>
+            </div>
+        </section>
+
+        <footer>
+            <span id="updated-at" class="dim"></span>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

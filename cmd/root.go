@@ -70,6 +70,7 @@ func init() {
 	rootCmd.AddCommand(mcpCmd)
 	rootCmd.AddCommand(serviceCmd)
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(webCmd)
 }
 
 func loadConfig() (*config.Config, error) {
