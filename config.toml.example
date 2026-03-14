@@ -1,0 +1,25 @@
+# Probe targets
+[targets]
+icmp = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
+dns_query = "google.com"
+dns_resolvers = ["system", "1.1.1.1:53"]
+http = "https://clients3.google.com/generate_204"
+
+# Probe intervals
+[intervals]
+icmp = "5s"
+dns = "30s"
+http = "30s"
+
+# Storage
+[storage]
+path = "~/.local/share/pingolin/pingolin.db"
+retention = "30d"
+
+# Outage detection
+[outage]
+consecutive_failures = 3
+
+# TUI
+[tui]
+default_timerange = "1h"
