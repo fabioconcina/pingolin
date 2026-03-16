@@ -1,34 +1,16 @@
 package mcpserver
 
 import (
-	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
 	"time"
+
+	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
 
 	"github.com/fabioconcina/pingolin/internal/store"
 )
-
-type request struct {
-	JSONRPC string          `json:"jsonrpc"`
-	ID      json.RawMessage `json:"id"`
-	Method  string          `json:"method"`
-	Params  json.RawMessage `json:"params,omitempty"`
-}
-
-type response struct {
-	JSONRPC string      `json:"jsonrpc"`
-	ID      interface{} `json:"id"`
-	Result  interface{} `json:"result,omitempty"`
-	Error   *rpcError   `json:"error,omitempty"`
-}
-
-type rpcError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
 
 type connectionStatus struct {
 	Status  string         `json:"status"`
@@ -39,11 +21,11 @@ type connectionStatus struct {
 }
 
 type targetStatus struct {
-	Target     string   `json:"target"`
-	LastRTTMs  *float64 `json:"last_rtt_ms"`
-	AvgRTTMs   float64  `json:"avg_rtt_ms"`
-	LossRate   float64  `json:"loss_rate_pct"`
-	Samples    int      `json:"samples"`
+	Target    string   `json:"target"`
+	LastRTTMs *float64 `json:"last_rtt_ms"`
+	AvgRTTMs  float64  `json:"avg_rtt_ms"`
+	LossRate  float64  `json:"loss_rate_pct"`
+	Samples   int      `json:"samples"`
 }
 
 type dnsStatus struct {
@@ -61,107 +43,64 @@ type httpStatus struct {
 }
 
 type outageInfo struct {
-	StartedAt  string  `json:"started_at"`
-	Duration   string  `json:"duration"`
-	Cause      string  `json:"cause"`
+	StartedAt string `json:"started_at"`
+	Duration  string `json:"duration"`
+	Cause     string `json:"cause"`
+}
+
+// NewServer creates a configured MCP server without starting it.
+func NewServer(s *store.Store, version string, targets []string) *server.MCPServer {
+	srv := server.NewMCPServer(
+		"pingolin",
+		version,
+		server.WithToolCapabilities(true),
+	)
+
+	tool := mcp.NewTool("check_connection",
+		mcp.WithDescription(
+			"Check internet connection health. Returns current status of ICMP, DNS, and HTTP probes plus recent outages.",
+		),
+	)
+
+	srv.AddTool(tool, makeHandler(s, targets))
+
+	return srv
 }
 
 // Run starts an MCP server on stdio, blocking until stdin closes.
 func Run(s *store.Store, version string, targets []string) error {
-	scanner := bufio.NewScanner(os.Stdin)
-	out := os.Stdout
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "" {
-			continue
-		}
-
-		var req request
-		if err := json.Unmarshal([]byte(line), &req); err != nil {
-			writeResponse(out, response{JSONRPC: "2.0", ID: nil, Error: &rpcError{Code: -32700, Message: "Parse error"}})
-			continue
-		}
-
-		var id interface{}
-		if req.ID != nil {
-			json.Unmarshal(req.ID, &id)
-		}
-
-		switch req.Method {
-		case "initialize":
-			writeResponse(out, response{
-				JSONRPC: "2.0",
-				ID:      id,
-				Result: map[string]interface{}{
-					"protocolVersion": "2024-11-05",
-					"capabilities":    map[string]interface{}{"tools": map[string]interface{}{}},
-					"serverInfo":      map[string]interface{}{"name": "pingolin", "version": version},
-				},
-			})
-		case "notifications/initialized":
-			// notification, no response
-		case "tools/list":
-			writeResponse(out, response{
-				JSONRPC: "2.0",
-				ID:      id,
-				Result: map[string]interface{}{
-					"tools": []interface{}{
-						map[string]interface{}{
-							"name":        "check_connection",
-							"description": "Check internet connection health. Returns current status of ICMP, DNS, and HTTP probes plus recent outages.",
-							"inputSchema": map[string]interface{}{
-								"type":                 "object",
-								"properties":           map[string]interface{}{},
-								"additionalProperties": false,
-							},
-						},
-					},
-				},
-			})
-		case "tools/call":
-			handleToolsCall(out, id, req.Params, s, targets)
-		case "ping":
-			writeResponse(out, response{JSONRPC: "2.0", ID: id, Result: map[string]interface{}{}})
-		default:
-			writeResponse(out, response{JSONRPC: "2.0", ID: id, Error: &rpcError{Code: -32601, Message: fmt.Sprintf("Method not found: %s", req.Method)}})
-		}
-	}
-
-	return scanner.Err()
+	return server.ServeStdio(NewServer(s, version, targets))
 }
 
-func handleToolsCall(out io.Writer, id interface{}, params json.RawMessage, s *store.Store, targets []string) {
-	var p struct {
-		Name string `json:"name"`
-	}
-	if params != nil {
-		json.Unmarshal(params, &p)
-	}
+func makeHandler(s *store.Store, targets []string) server.ToolHandlerFunc {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		status := gatherStatus(s, targets)
+		data, err := json.MarshalIndent(status, "", "  ")
+		if err != nil {
+			return toolError(fmt.Sprintf("JSON encoding failed: %v", err)), nil
+		}
 
-	if p.Name != "check_connection" {
-		writeResponse(out, response{
-			JSONRPC: "2.0",
-			ID:      id,
-			Result: map[string]interface{}{
-				"content": []interface{}{map[string]interface{}{"type": "text", "text": fmt.Sprintf("Unknown tool: %s", p.Name)}},
-				"isError": true,
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{
+				mcp.TextContent{
+					Type: "text",
+					Text: string(data),
+				},
 			},
-		})
-		return
+		}, nil
 	}
+}
 
-	status := gatherStatus(s, targets)
-	data, _ := json.MarshalIndent(status, "", "  ")
-
-	writeResponse(out, response{
-		JSONRPC: "2.0",
-		ID:      id,
-		Result: map[string]interface{}{
-			"content": []interface{}{map[string]interface{}{"type": "text", "text": string(data)}},
-			"isError": false,
+func toolError(msg string) *mcp.CallToolResult {
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			mcp.TextContent{
+				Type: "text",
+				Text: msg,
+			},
 		},
-	})
+		IsError: true,
+	}
 }
 
 func gatherStatus(s *store.Store, targets []string) *connectionStatus {
@@ -237,12 +176,4 @@ func gatherStatus(s *store.Store, targets []string) *connectionStatus {
 
 	cs.Status = overall
 	return cs
-}
-
-func writeResponse(out io.Writer, resp response) {
-	data, err := json.Marshal(resp)
-	if err != nil {
-		return
-	}
-	fmt.Fprintf(out, "%s\n", data)
 }
