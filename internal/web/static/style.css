@@ -94,7 +94,8 @@ h1 {
 
 .target-stats {
     display: flex;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 4px 16px;
     margin-bottom: 8px;
     align-items: baseline;
 }
