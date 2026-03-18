@@ -39,6 +39,10 @@ pingolin mcp          # run as MCP server (stdio)
 
 ## Web dashboard
 
+<p align="center">
+  <img src="assets/web-dashboard.png" alt="pingolin web dashboard">
+</p>
+
 ```
 pingolin web [--listen 0.0.0.0:8080]
 ```
