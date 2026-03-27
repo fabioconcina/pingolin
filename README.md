@@ -13,6 +13,22 @@ Internet connection health monitor — run it, see what's going on.
 
 ## Install
 
+Download a prebuilt binary from [the latest release](https://github.com/fabioconcina/pingolin/releases/latest):
+
+```sh
+# Linux (x86_64)
+curl -Lo pingolin https://github.com/fabioconcina/pingolin/releases/latest/download/pingolin-linux-amd64
+chmod +x pingolin
+./pingolin
+
+# macOS (Apple Silicon)
+curl -Lo pingolin https://github.com/fabioconcina/pingolin/releases/latest/download/pingolin-darwin-arm64
+chmod +x pingolin
+./pingolin
+```
+
+Or install with Go:
+
 ```
 go install github.com/fabioconcina/pingolin@latest
 ```

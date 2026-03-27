@@ -63,7 +63,13 @@ Use exit codes in scripts: `pingolin status || notify-send "connection issues"`
 
 ## Quick start
 
-Download a prebuilt binary from the latest release, or build from source:
+Download a prebuilt binary from the latest release:
+
+    curl -Lo pingolin https://github.com/fabioconcina/pingolin/releases/latest/download/pingolin-linux-amd64
+    chmod +x pingolin
+    ./pingolin
+
+Or build from source:
 
     git clone https://github.com/fabioconcina/pingolin
     cd pingolin && make build
