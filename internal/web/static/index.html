@@ -18,27 +18,35 @@
             <div id="status" class="status healthy">HEALTHY</div>
         </header>
 
-        <section class="targets" id="targets"></section>
+        <section class="section-group">
+            <h2 class="section-title">Targets</h2>
+            <div class="targets" id="targets"></div>
+        </section>
 
-        <section class="probes">
-            <div class="card" id="dns-card">
-                <h3>DNS</h3>
-                <div class="probe-stats">
-                    <span class="label">last</span>
-                    <span class="value" id="dns-last">--</span>
-                    <span class="label">avg</span>
-                    <span class="value" id="dns-avg">--</span>
-                    <span class="indicator" id="dns-status"></span>
+        <section class="section-group">
+            <h2 class="section-title">Probes</h2>
+            <div class="probes">
+                <div class="card" id="dns-card">
+                    <h3>DNS</h3>
+                    <span class="probe-subtitle" id="dns-resolver"></span>
+                    <div class="probe-stats">
+                        <span class="label">last</span>
+                        <span class="value" id="dns-last">--</span>
+                        <span class="label">avg</span>
+                        <span class="value" id="dns-avg">--</span>
+                        <span class="indicator" id="dns-status"></span>
+                    </div>
                 </div>
-            </div>
-            <div class="card" id="http-card">
-                <h3>HTTP</h3>
-                <div class="probe-stats">
-                    <span class="label">last</span>
-                    <span class="value" id="http-last">--</span>
-                    <span class="label">status</span>
-                    <span class="value" id="http-status">--</span>
-                    <span class="indicator" id="http-indicator"></span>
+                <div class="card" id="http-card">
+                    <h3>HTTP</h3>
+                    <span class="probe-subtitle" id="http-target"></span>
+                    <div class="probe-stats">
+                        <span class="label">last</span>
+                        <span class="value" id="http-last">--</span>
+                        <span class="label">status</span>
+                        <span class="value" id="http-status">--</span>
+                        <span class="indicator" id="http-indicator"></span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -55,7 +63,7 @@
                 </div>
             </div>
             <div id="outages-list" class="outages-list">
-                <span class="dim">No outages recorded</span>
+                <span class="empty">No outages recorded</span>
             </div>
         </section>
 
