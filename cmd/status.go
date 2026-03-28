@@ -30,7 +30,10 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	since := time.Now().Add(-1 * time.Hour).UnixMilli()
 
 	// Overall status
-	open, _ := s.OpenOutage()
+	open, err := s.OpenOutage()
+	if err != nil {
+		return fmt.Errorf("checking outage status: %w", err)
+	}
 	unhealthy := open != nil
 	if unhealthy {
 		fmt.Println("Status: DOWN")

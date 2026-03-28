@@ -1,9 +1,9 @@
 package web
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/fabioconcina/pingolin/internal/config"
 	"github.com/fabioconcina/pingolin/internal/store"
 )
 
@@ -107,7 +107,7 @@ func FetchDashboardData(s *store.Store, targets []string) DashboardData {
 				Cause:     o.Cause,
 			}
 			if o.DurationMs != nil {
-				od.Duration = formatDuration(time.Duration(*o.DurationMs) * time.Millisecond)
+				od.Duration = config.FormatDuration(time.Duration(*o.DurationMs) * time.Millisecond)
 			} else {
 				od.Duration = "ongoing"
 			}
@@ -181,17 +181,3 @@ func downsampleRTTs(pings []store.PingResult, maxPoints int) []float64 {
 	return values
 }
 
-func formatDuration(d time.Duration) string {
-	if d < time.Minute {
-		return fmt.Sprintf("%ds", int(d.Seconds()))
-	}
-	if d < time.Hour {
-		return fmt.Sprintf("%dm %ds", int(d.Minutes()), int(d.Seconds())%60)
-	}
-	if d < 24*time.Hour {
-		return fmt.Sprintf("%dh %dm", int(d.Hours()), int(d.Minutes())%60)
-	}
-	days := int(d.Hours()) / 24
-	hours := int(d.Hours()) % 24
-	return fmt.Sprintf("%dd %dh", days, hours)
-}

@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/fabioconcina/pingolin/internal/config"
 	"github.com/fabioconcina/pingolin/internal/store"
 )
 
@@ -33,7 +35,7 @@ func runHistory(cmd *cobra.Command, args []string) error {
 	}
 	defer s.Close()
 
-	duration, err := parseWindowDuration(historyLast)
+	duration, err := config.ParseDuration(historyLast)
 	if err != nil {
 		return fmt.Errorf("invalid duration %q: %w", historyLast, err)
 	}
@@ -43,7 +45,7 @@ func runHistory(cmd *cobra.Command, args []string) error {
 	until := now.UnixMilli()
 
 	fmt.Printf("Pingolin History — last %s\n", historyLast)
-	fmt.Println(repeatChar('─', 50))
+	fmt.Println(strings.Repeat("─", 50))
 	fmt.Println()
 
 	// ICMP stats
@@ -113,20 +115,4 @@ func runHistory(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseWindowDuration(s string) (time.Duration, error) {
-	if len(s) > 1 && s[len(s)-1] == 'd' {
-		var days int
-		if _, err := fmt.Sscanf(s, "%dd", &days); err == nil {
-			return time.Duration(days) * 24 * time.Hour, nil
-		}
-	}
-	return time.ParseDuration(s)
-}
 
-func repeatChar(c rune, n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = byte(c)
-	}
-	return string(b)
-}

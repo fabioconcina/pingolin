@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/fabioconcina/pingolin/internal/config"
 	"github.com/fabioconcina/pingolin/internal/store"
 )
 
@@ -202,7 +203,6 @@ func (m Model) View() string {
 	if m.width == 0 {
 		return "Loading..."
 	}
-
 	if m.splash {
 		return renderSplash(m)
 	}
@@ -216,20 +216,31 @@ func (m Model) View() string {
 	}
 
 	var sb strings.Builder
-
-	// Title
 	sb.WriteString(titleStyle.Render(" pingolin "))
 	sb.WriteString("\n\n")
+	m.renderStatus(&sb)
+	m.renderLatency(&sb, sparkWidth)
+	m.renderPacketLoss(&sb, sparkWidth)
+	m.renderDNS(&sb)
+	m.renderHTTP(&sb)
+	m.renderOutages(&sb)
+	sb.WriteString(fmt.Sprintf("  %s  time range: %s\n",
+		helpStyle.Render("[q]uit  [t]ime range  [d]etail  ↑/↓ scroll"),
+		labelStyle.Render(timeRangeLabels[m.timeRangeIdx]),
+	))
+	return borderStyle.Render(sb.String())
+}
 
-	// Status + uptime
+func (m Model) renderStatus(sb *strings.Builder) {
 	uptime := time.Since(m.startTime).Truncate(time.Second)
 	sb.WriteString(fmt.Sprintf("  STATUS: %s%suptime: %s\n\n",
 		m.status.String(),
 		strings.Repeat(" ", max(2, 30-len("STATUS: ● HEALTHY"))),
-		formatDuration(uptime),
+		config.FormatDuration(uptime),
 	))
+}
 
-	// Latency per target
+func (m Model) renderLatency(sb *strings.Builder, sparkWidth int) {
 	for _, target := range m.targets {
 		lastStr := "--"
 		avgStr := "--"
@@ -246,15 +257,15 @@ func (m Model) View() string {
 			valueStyle.Render(avgStr),
 		))
 
-		// Sparkline
 		avg := m.avgRTT[target]
 		values := extractRTTs(m.pingData[target])
 		sb.WriteString("  ")
 		sb.WriteString(RenderSparkline(values, sparkWidth, avg))
 		sb.WriteString("\n\n")
 	}
+}
 
-	// Packet loss
+func (m Model) renderPacketLoss(sb *strings.Builder, sparkWidth int) {
 	currentLoss := 0.0
 	avgLoss := 0.0
 	totalCount := 0
@@ -282,8 +293,9 @@ func (m Model) View() string {
 	sb.WriteString("  ")
 	sb.WriteString(RenderLossBar(losses, sparkWidth))
 	sb.WriteString("\n\n")
+}
 
-	// DNS
+func (m Model) renderDNS(sb *strings.Builder) {
 	dnsLastStr := "--"
 	if m.latestDNS != nil && m.latestDNS.ResolveMs != nil {
 		dnsLastStr = fmt.Sprintf("%.0fms", *m.latestDNS.ResolveMs)
@@ -293,8 +305,9 @@ func (m Model) View() string {
 		valueStyle.Render(dnsLastStr),
 		valueStyle.Render(fmt.Sprintf("%.0fms", m.avgDNS)),
 	))
+}
 
-	// HTTP
+func (m Model) renderHTTP(sb *strings.Builder) {
 	httpLastStr := "--"
 	httpStatusStr := "--"
 	if m.latestHTTP != nil {
@@ -311,52 +324,45 @@ func (m Model) View() string {
 		valueStyle.Render(httpStatusStr),
 	))
 	sb.WriteString("\n")
+}
 
-	// Outages
+func (m Model) renderOutages(sb *strings.Builder) {
 	sb.WriteString(fmt.Sprintf("  %s\n", labelStyle.Render("RECENT OUTAGES")))
 	if len(m.outages) == 0 {
 		sb.WriteString(fmt.Sprintf("  %s\n", dimStyle.Render("No outages recorded")))
-	} else {
-		maxShow := 5
-		start := m.outageScroll
-		if start >= len(m.outages) {
-			start = len(m.outages) - 1
-		}
-		end := start + maxShow
-		if end > len(m.outages) {
-			end = len(m.outages)
-		}
+		sb.WriteString("\n")
+		return
+	}
 
-		for i := start; i < end; i++ {
-			o := m.outages[i]
-			prefix := "├─"
-			if i == end-1 {
-				prefix = "└─"
-			}
-			ts := time.UnixMilli(o.StartedAt).Format("2006-01-02 15:04")
-			dur := "--"
-			if o.DurationMs != nil {
-				dur = formatDuration(time.Duration(*o.DurationMs) * time.Millisecond)
-			} else {
-				dur = "ongoing"
-			}
-			sb.WriteString(fmt.Sprintf("  %s %s  duration: %s  (%s)\n",
-				outageStyle.Render(prefix),
-				outageStyle.Render(ts),
-				outageStyle.Render(dur),
-				outageStyle.Render(o.Cause),
-			))
+	maxShow := 5
+	start := m.outageScroll
+	if start >= len(m.outages) {
+		start = len(m.outages) - 1
+	}
+	end := start + maxShow
+	if end > len(m.outages) {
+		end = len(m.outages)
+	}
+
+	for i := start; i < end; i++ {
+		o := m.outages[i]
+		prefix := "├─"
+		if i == end-1 {
+			prefix = "└─"
 		}
+		ts := time.UnixMilli(o.StartedAt).Format("2006-01-02 15:04")
+		dur := "ongoing"
+		if o.DurationMs != nil {
+			dur = config.FormatDuration(time.Duration(*o.DurationMs) * time.Millisecond)
+		}
+		sb.WriteString(fmt.Sprintf("  %s %s  duration: %s  (%s)\n",
+			outageStyle.Render(prefix),
+			outageStyle.Render(ts),
+			outageStyle.Render(dur),
+			outageStyle.Render(o.Cause),
+		))
 	}
 	sb.WriteString("\n")
-
-	// Help
-	sb.WriteString(fmt.Sprintf("  %s  time range: %s\n",
-		helpStyle.Render("[q]uit  [t]ime range  [d]etail  ↑/↓ scroll"),
-		labelStyle.Render(timeRangeLabels[m.timeRangeIdx]),
-	))
-
-	return borderStyle.Render(sb.String())
 }
 
 func extractRTTs(pings []store.PingResult) []*float64 {
@@ -402,17 +408,3 @@ func renderSplash(m Model) string {
 		content)
 }
 
-func formatDuration(d time.Duration) string {
-	if d < time.Minute {
-		return fmt.Sprintf("%ds", int(d.Seconds()))
-	}
-	if d < time.Hour {
-		return fmt.Sprintf("%dm %ds", int(d.Minutes()), int(d.Seconds())%60)
-	}
-	if d < 24*time.Hour {
-		return fmt.Sprintf("%dh %dm", int(d.Hours()), int(d.Minutes())%60)
-	}
-	days := int(d.Hours()) / 24
-	hours := int(d.Hours()) % 24
-	return fmt.Sprintf("%dd %dh", days, hours)
-}

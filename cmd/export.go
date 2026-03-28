@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/fabioconcina/pingolin/internal/config"
 	"github.com/fabioconcina/pingolin/internal/store"
 )
 
@@ -40,7 +41,7 @@ func runExport(cmd *cobra.Command, args []string) error {
 	}
 	defer s.Close()
 
-	duration, err := parseWindowDuration(exportLast)
+	duration, err := config.ParseDuration(exportLast)
 	if err != nil {
 		return fmt.Errorf("invalid duration %q: %w", exportLast, err)
 	}

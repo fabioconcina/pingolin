@@ -97,7 +97,10 @@ func (s *Store) InsertPing(result PingResult) error {
 		 VALUES (?, ?, ?, ?, ?, ?)`,
 		result.Timestamp, result.Target, result.RTTMs, boolToInt(result.PacketLoss), result.JitterMs, result.ProbeType,
 	)
-	return err
+	if err != nil {
+		return fmt.Errorf("inserting ping result: %w", err)
+	}
+	return nil
 }
 
 func (s *Store) InsertDNS(result DNSResult) error {
@@ -108,7 +111,10 @@ func (s *Store) InsertDNS(result DNSResult) error {
 		 VALUES (?, ?, ?, ?, ?, ?)`,
 		result.Timestamp, result.Query, result.Resolver, result.ResolveMs, boolToInt(result.Success), result.ResolvedIPs,
 	)
-	return err
+	if err != nil {
+		return fmt.Errorf("inserting dns result: %w", err)
+	}
+	return nil
 }
 
 func (s *Store) InsertHTTP(result HTTPResult) error {
@@ -119,7 +125,10 @@ func (s *Store) InsertHTTP(result HTTPResult) error {
 		 VALUES (?, ?, ?, ?, ?, ?)`,
 		result.Timestamp, result.Target, result.TotalMs, result.TLSMs, result.StatusCode, boolToInt(result.Success),
 	)
-	return err
+	if err != nil {
+		return fmt.Errorf("inserting http result: %w", err)
+	}
+	return nil
 }
 
 func (s *Store) InsertOutage(outage Outage) (int64, error) {
@@ -142,7 +151,10 @@ func (s *Store) CloseOutage(id int64, endedAt int64) error {
 		`UPDATE outages SET ended_at = ?, duration_ms = ? - started_at WHERE id = ?`,
 		endedAt, endedAt, id,
 	)
-	return err
+	if err != nil {
+		return fmt.Errorf("closing outage %d: %w", id, err)
+	}
+	return nil
 }
 
 func (s *Store) OpenOutage() (*Outage, error) {

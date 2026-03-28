@@ -27,7 +27,7 @@ func (p *Prober) probeICMP(target string, jitterCalc *JitterCalculator) {
 	pinger, err := probing.NewPinger(target)
 	if err != nil {
 		log.Printf("icmp: error creating pinger for %s: %v", target, err)
-		p.recordICMPFailure(target)
+		p.outageDetector.RecordFailure(target)
 		return
 	}
 	pinger.Count = 1
@@ -36,7 +36,7 @@ func (p *Prober) probeICMP(target string, jitterCalc *JitterCalculator) {
 
 	if err := pinger.Run(); err != nil {
 		log.Printf("icmp: error pinging %s: %v", target, err)
-		p.recordICMPFailure(target)
+		p.outageDetector.RecordFailure(target)
 		return
 	}
 
@@ -44,7 +44,7 @@ func (p *Prober) probeICMP(target string, jitterCalc *JitterCalculator) {
 	now := time.Now().UnixMilli()
 
 	if stats.PacketsRecv == 0 {
-		p.recordICMPFailure(target)
+		p.outageDetector.RecordFailure(target)
 		result := store.PingResult{
 			Timestamp:  now,
 			Target:     target,
@@ -79,6 +79,3 @@ func (p *Prober) probeICMP(target string, jitterCalc *JitterCalculator) {
 	}
 }
 
-func (p *Prober) recordICMPFailure(target string) {
-	p.outageDetector.RecordFailure(target)
-}

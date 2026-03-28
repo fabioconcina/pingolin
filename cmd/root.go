@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -89,46 +90,38 @@ func applyFlags(cfg *config.Config) {
 	if targets != "" {
 		cfg.Targets.ICMP = splitTargets(targets)
 	}
+	if pingInt != "" {
+		if d, err := config.ParseDuration(pingInt); err == nil {
+			cfg.Intervals.ICMP = config.Duration{Duration: d}
+		}
+	}
+	if dnsInt != "" {
+		if d, err := config.ParseDuration(dnsInt); err == nil {
+			cfg.Intervals.DNS = config.Duration{Duration: d}
+		}
+	}
+	if httpInt != "" {
+		if d, err := config.ParseDuration(httpInt); err == nil {
+			cfg.Intervals.HTTP = config.Duration{Duration: d}
+		}
+	}
+	if retention != "" {
+		if d, err := config.ParseDuration(retention); err == nil {
+			cfg.Storage.Retention = config.Duration{Duration: d}
+		}
+	}
 	cfg.Verbose = verbose
 }
 
 func splitTargets(s string) []string {
 	var result []string
-	for _, t := range splitComma(s) {
-		t = trimSpace(t)
+	for _, t := range strings.Split(s, ",") {
+		t = strings.TrimSpace(t)
 		if t != "" {
 			result = append(result, t)
 		}
 	}
 	return result
-}
-
-func splitComma(s string) []string {
-	var parts []string
-	current := ""
-	for _, c := range s {
-		if c == ',' {
-			parts = append(parts, current)
-			current = ""
-		} else {
-			current += string(c)
-		}
-	}
-	if current != "" {
-		parts = append(parts, current)
-	}
-	return parts
-}
-
-func trimSpace(s string) string {
-	start, end := 0, len(s)
-	for start < end && (s[start] == ' ' || s[start] == '\t') {
-		start++
-	}
-	for end > start && (s[end-1] == ' ' || s[end-1] == '\t') {
-		end--
-	}
-	return s[start:end]
 }
 
 func runTUI(cmd *cobra.Command, args []string) error {
