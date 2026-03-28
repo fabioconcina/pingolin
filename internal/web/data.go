@@ -13,7 +13,6 @@ type DashboardData struct {
 	DNS       *DNSData     `json:"dns"`
 	HTTP      *HTTPData    `json:"http"`
 	Outages   []OutageData `json:"outages"`
-	TimeRange string       `json:"time_range"`
 	UpdatedAt int64        `json:"updated_at"`
 }
 
@@ -47,28 +46,13 @@ type OutageData struct {
 	Cause      string  `json:"cause"`
 }
 
-var timeRanges = map[string]time.Duration{
-	"1h":  1 * time.Hour,
-	"6h":  6 * time.Hour,
-	"24h": 24 * time.Hour,
-	"7d":  7 * 24 * time.Hour,
-	"30d": 30 * 24 * time.Hour,
-}
-
-func FetchDashboardData(s *store.Store, targets []string, timeRange string) DashboardData {
-	dur, ok := timeRanges[timeRange]
-	if !ok {
-		dur = 1 * time.Hour
-		timeRange = "1h"
-	}
-
+func FetchDashboardData(s *store.Store, targets []string) DashboardData {
 	now := time.Now()
-	since := now.Add(-dur).UnixMilli()
+	since := now.Add(-1 * time.Hour).UnixMilli()
 	until := now.UnixMilli()
 
 	data := DashboardData{
 		Status:    "healthy",
-		TimeRange: timeRange,
 		UpdatedAt: now.UnixMilli(),
 	}
 

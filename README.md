@@ -65,7 +65,7 @@ pingolin web [--listen 0.0.0.0:8080]
 
 Starts an HTTP server with a live dashboard. The page uses Server-Sent Events (SSE) to update every 2 seconds — no manual refresh needed. Designed for always-on displays (tablets, wall monitors).
 
-The dashboard shows the same data as the TUI: per-target latency sparklines, packet loss, DNS and HTTP status, and recent outages. Time range is selectable from the browser.
+The dashboard shows the same data as the TUI: per-target latency sparklines (last hour), packet loss, DNS and HTTP status, and recent outages.
 
 If no daemon is running, the web server starts its own embedded prober automatically.
 

@@ -2,7 +2,6 @@
     "use strict";
 
     var SVG_NS = "http://www.w3.org/2000/svg";
-    var currentRange = "1h";
     var eventSource = null;
     var gradientCounter = 0;
 
@@ -10,7 +9,7 @@
         if (eventSource) {
             eventSource.close();
         }
-        eventSource = new EventSource("/events?range=" + currentRange);
+        eventSource = new EventSource("/events");
         eventSource.onmessage = function (e) {
             try {
                 updateDashboard(JSON.parse(e.data));
@@ -145,6 +144,11 @@
             sparkDiv.appendChild(renderSparkline(t.sparkline, t.avg_rtt));
             attachTooltip(sparkDiv, t.sparkline);
             card.appendChild(sparkDiv);
+
+            var axis = document.createElement("div");
+            axis.className = "sparkline-axis";
+            axis.innerHTML = '<span>-1h</span><span>now</span>';
+            card.appendChild(axis);
         }
 
         return card;
@@ -332,18 +336,6 @@
             tooltip.style.opacity = "0";
         });
     }
-
-    // Time range buttons
-    document.getElementById("time-ranges").addEventListener("click", function (e) {
-        if (e.target.tagName !== "BUTTON") return;
-
-        var buttons = document.querySelectorAll(".time-ranges button");
-        buttons.forEach(function (b) { b.classList.remove("active"); });
-        e.target.classList.add("active");
-
-        currentRange = e.target.getAttribute("data-range");
-        connect();
-    });
 
     // Start
     connect();

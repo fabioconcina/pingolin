@@ -71,13 +71,8 @@ func (srv *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	timeRange := r.URL.Query().Get("range")
-	if timeRange == "" {
-		timeRange = "1h"
-	}
-
 	// Send initial data immediately
-	srv.sendEvent(w, flusher, timeRange)
+	srv.sendEvent(w, flusher)
 
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
@@ -85,15 +80,15 @@ func (srv *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case <-ticker.C:
-			srv.sendEvent(w, flusher, timeRange)
+			srv.sendEvent(w, flusher)
 		case <-r.Context().Done():
 			return
 		}
 	}
 }
 
-func (srv *Server) sendEvent(w http.ResponseWriter, flusher http.Flusher, timeRange string) {
-	data := FetchDashboardData(srv.store, srv.targets, timeRange)
+func (srv *Server) sendEvent(w http.ResponseWriter, flusher http.Flusher) {
+	data := FetchDashboardData(srv.store, srv.targets)
 	data.UpdatedAt = time.Now().UnixMilli()
 
 	jsonData, err := json.Marshal(data)
@@ -106,12 +101,7 @@ func (srv *Server) sendEvent(w http.ResponseWriter, flusher http.Flusher, timeRa
 }
 
 func (srv *Server) handleAPIData(w http.ResponseWriter, r *http.Request) {
-	timeRange := r.URL.Query().Get("range")
-	if timeRange == "" {
-		timeRange = "1h"
-	}
-
-	data := FetchDashboardData(srv.store, srv.targets, timeRange)
+	data := FetchDashboardData(srv.store, srv.targets)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
