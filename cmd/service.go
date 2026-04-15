@@ -117,6 +117,7 @@ User=%s
 ExecStart=%s web
 Restart=on-failure
 RestartSec=5
+AmbientCapabilities=CAP_NET_RAW
 
 [Install]
 WantedBy=multi-user.target

@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -191,4 +192,19 @@ func isDaemonRunning() bool {
 	// Check if the process is actually running
 	err = process.Signal(syscall.Signal(0))
 	return err == nil
+}
+
+// waitForDaemon waits briefly for the daemon to start and write its PID file.
+// This avoids a race when both services start at the same time via systemd.
+func waitForDaemon() bool {
+	if isDaemonRunning() {
+		return true
+	}
+	for range 5 {
+		time.Sleep(500 * time.Millisecond)
+		if isDaemonRunning() {
+			return true
+		}
+	}
+	return false
 }

@@ -49,8 +49,9 @@ func runWeb(cmd *cobra.Command, args []string) error {
 	go s.StartRetentionCleanup(cfg.Storage.Retention.Duration, stopRetention)
 	defer close(stopRetention)
 
-	// Start embedded prober if daemon is not running
-	if !isDaemonRunning() {
+	// Start embedded prober if daemon is not running.
+	// Use waitForDaemon to handle the race when both start via systemd.
+	if !waitForDaemon() {
 		od := outage.NewDetector(s, cfg.Targets.ICMP, cfg.Outage.ConsecutiveFailures)
 		p := prober.New(s, cfg, od)
 		p.Verbose = cfg.Verbose
