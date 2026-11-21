@@ -44,7 +44,7 @@ func runHistory(cmd *cobra.Command, args []string) error {
 	since := now.Add(-duration).UnixMilli()
 	until := now.UnixMilli()
 
-	fmt.Printf("Pingolin History — last %s\n", historyLast)
+	fmt.Printf("Pingolin History (last %s)\n", historyLast)
 	fmt.Println(strings.Repeat("─", 50))
 	fmt.Println()
 

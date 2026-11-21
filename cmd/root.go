@@ -47,7 +47,7 @@ func setUnhealthy() {
 var rootCmd = &cobra.Command{
 	Use:   "pingolin",
 	Short: "Internet connection health monitor",
-	Long:  "pingolin — Internet connection health monitor with historical tracking.",
+	Long:  "pingolin: Internet connection health monitor with historical tracking.",
 	RunE:  runTUI,
 }
 

@@ -2,6 +2,7 @@
   <img src="assets/banner.png" alt="pingolin" width="400">
 </p>
 
+[![CI](https://github.com/fabioconcina/pingolin/actions/workflows/ci.yml/badge.svg)](https://github.com/fabioconcina/pingolin/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fabioconcina/pingolin)](https://goreportcard.com/report/github.com/fabioconcina/pingolin)
 [![GitHub release](https://img.shields.io/github/v/release/fabioconcina/pingolin)](https://github.com/fabioconcina/pingolin/releases/latest)
 [![Go version](https://img.shields.io/github/go-mod/go-version/fabioconcina/pingolin)](go.mod)
@@ -9,7 +10,7 @@
 
 # pingolin
 
-Internet connection health monitor — run it, see what's going on.
+Internet connection health monitor: run it, see what's going on.
 
 ## Install
 
@@ -63,7 +64,7 @@ pingolin mcp          # run as MCP server (stdio)
 pingolin web [--listen 0.0.0.0:8080]
 ```
 
-Starts an HTTP server with a live dashboard. The page uses Server-Sent Events (SSE) to update every 2 seconds — no manual refresh needed. Designed for always-on displays (tablets, wall monitors).
+Starts an HTTP server with a live dashboard. The page uses Server-Sent Events (SSE) to update every 2 seconds, so no manual refresh is needed. Designed for always-on displays (tablets, wall monitors).
 
 The dashboard shows the same data as the TUI: per-target latency sparklines (last hour), packet loss, DNS and HTTP status, and recent outages.
 
@@ -116,11 +117,11 @@ pingolin export --format json | jq '.pings[] | select(.packet_loss == true)'
 
 - 0: success
 - 1: error (config load failure, database error, I/O error)
-- 2: connection unhealthy (status command only — at least one probe failing)
+- 2: connection unhealthy (status command only: at least one probe failing)
 
 ## Running as a service
 
-pingolin monitors continuously — to collect data 24/7, run it as a systemd service:
+pingolin monitors continuously. To collect data 24/7, run it as a systemd service:
 
 ```
 sudo pingolin service install
@@ -128,10 +129,10 @@ sudo pingolin service install
 
 This installs two systemd services:
 
-- `pingolin.service` — background daemon that runs ICMP/DNS/HTTP probes and writes to the database. Granted `CAP_NET_RAW` for ICMP via `AmbientCapabilities`.
-- `pingolin-web.service` — web dashboard on port 8080, reads from the same database. Starts after the daemon.
+- `pingolin.service`: background daemon that runs ICMP/DNS/HTTP probes and writes to the database. Granted `CAP_NET_RAW` for ICMP via `AmbientCapabilities`.
+- `pingolin-web.service`: web dashboard on port 8080, reads from the same database. Starts after the daemon and waits for it to come up before deciding whether to run its own prober. Also granted `CAP_NET_RAW`, so that fallback prober can still ping.
 
-It also creates a sudoers drop-in (`/etc/sudoers.d/pingolin`) so you can restart both services without a password — required for remote deploys.
+It also creates a sudoers drop-in (`/etc/sudoers.d/pingolin`) so you can restart both services without a password (required for remote deploys).
 
 The TUI and web dashboard auto-detect a running daemon and skip starting their own prober.
 

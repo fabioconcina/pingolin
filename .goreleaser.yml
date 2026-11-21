@@ -1,28 +1,37 @@
 version: 2
 
 builds:
-  - env:
+  - binary: pingolin
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    env:
       - CGO_ENABLED=0
     goos:
-      - linux
       - darwin
+      - linux
     goarch:
       - amd64
       - arm64
-    ldflags:
-      - -s -w -X main.version={{.Version}}
 
+# Raw binaries named pingolin-{os}-{arch}: the README's curl commands point
+# at these names under releases/latest/download, so keep them stable.
 archives:
-  - format: binary
-    name_template: >-
-      {{ .ProjectName }}-{{ .Os }}-{{ .Arch }}
+  - id: binaries
+    formats:
+      - binary
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
 
+sboms:
+  - artifacts: binary
+    disable: false
+
+# The release workflow attests dist/checksums.txt; keep the name stable
+# instead of goreleaser's default {project}_{version}_checksums.txt.
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
+
+release:
+  header: "{{ .Env.RELEASE_NOTES }}"
 
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
+  disable: true

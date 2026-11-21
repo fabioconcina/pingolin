@@ -57,7 +57,7 @@ Returns structured JSON to stdout. Pipe to any tool:
 
 - 0: success
 - 1: error (config load failure, database error, I/O error)
-- 2: connection unhealthy (status command only — at least one probe failing)
+- 2: connection unhealthy (status command only: at least one probe failing)
 
 Use exit codes in scripts: `pingolin status || notify-send "connection issues"`
 
@@ -103,8 +103,8 @@ Runs as a headless background service, collecting probe data. The TUI auto-detec
     sudo pingolin service logs        # view recent logs
 
 Installs two systemd services:
-- pingolin.service — daemon with CAP_NET_RAW for ICMP probing
-- pingolin-web.service — web dashboard on port 8080, depends on daemon
+- pingolin.service: daemon with CAP_NET_RAW for ICMP probing
+- pingolin-web.service: web dashboard on port 8080, depends on daemon (also has CAP_NET_RAW for its fallback prober)
 
 Also creates /etc/sudoers.d/pingolin for passwordless systemctl restart (needed for remote deploys).
 

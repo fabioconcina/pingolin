@@ -12,7 +12,10 @@ install: build
 	cp pingolin /usr/local/bin/
 
 test:
-	go test ./...
+	go test -v -race -count=1 ./...
+
+vet:
+	go vet ./...
 
 lint:
 	golangci-lint run
@@ -33,4 +36,4 @@ deploy: test
 		$(DEPLOY_PATH) version"
 	rm -f pingolin-linux
 
-.PHONY: build install test lint clean deploy
+.PHONY: build install test vet lint clean deploy
