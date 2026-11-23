@@ -54,6 +54,14 @@ pingolin mcp          # run as MCP server (stdio)
 - Jitter calculation over sliding window
 - Outage detection with historical logging and cause classification
 
+An outage starts when every ICMP target fails `consecutive_failures` times in a row. Its cause is worked out from the DNS and HTTP probes that ran during the outage, rechecked every minute while it lasts and settled when it ends:
+
+- `connection_down`: HTTP fails too, so the uplink is down. This is also the cause until there is evidence otherwise.
+- `icmp_blocked`: HTTP still works, so only ICMP is being dropped.
+- `upstream_dns`: HTTP works but the external DNS resolvers don't answer.
+
+Lookups through the `system` resolver are ignored here, because a local cache such as Pi-hole keeps serving stale answers while the internet is down.
+
 ## Web dashboard
 
 <p align="center">

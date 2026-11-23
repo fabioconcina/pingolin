@@ -160,6 +160,7 @@ Run as MCP server on stdio for AI agent integration.
 - HTTP connectivity to Google generate_204 endpoint
 - Jitter calculation over sliding window
 - Outage detection: consecutive failures trigger outage logging with cause classification
+- Outage causes, decided from DNS/HTTP probes run during the outage (rechecked every minute, final when it ends): connection_down (HTTP also fails; the default), icmp_blocked (HTTP works, only ICMP dropped), upstream_dns (HTTP works, external DNS resolvers fail). The system resolver is ignored because local caches serve stale answers during outages.
 
 ## Configuration
 

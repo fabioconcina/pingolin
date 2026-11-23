@@ -157,6 +157,18 @@ func (s *Store) CloseOutage(id int64, endedAt int64) error {
 	return nil
 }
 
+// UpdateOutageCause replaces the cause of an outage, e.g. once more probe
+// results from inside the outage window are available.
+func (s *Store) UpdateOutageCause(id int64, cause string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec(`UPDATE outages SET cause = ? WHERE id = ?`, cause, id)
+	if err != nil {
+		return fmt.Errorf("updating cause of outage %d: %w", id, err)
+	}
+	return nil
+}
+
 func (s *Store) OpenOutage() (*Outage, error) {
 	row := s.db.QueryRow(`SELECT id, started_at, cause FROM outages WHERE ended_at IS NULL ORDER BY started_at DESC LIMIT 1`)
 	var o Outage
